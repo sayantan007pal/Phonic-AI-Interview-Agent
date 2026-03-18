@@ -58,6 +58,23 @@ app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
 app.include_router(webhooks.router, prefix="/api/webhooks", tags=["webhooks"])
 
 
+# ── Public endpoint for candidate interview room ───────────────────
+@app.get("/api/public/interview/{session_id}")
+async def get_public_interview(session_id: str):
+    """Public endpoint — no auth required. Returns limited session info for candidate room."""
+    db = get_db()
+    doc = await db.interview_sessions.find_one(
+        {"session_id": session_id},
+        {"_id": 0, "session_id": 1, "status": 1, "mode": 1,
+         "candidate.name": 1, "job.title": 1, "job.company": 1,
+         "config.accent": 1, "config.interviewer_name": 1, "config.total_duration_minutes": 1}
+    )
+    if not doc:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Session not found")
+    return doc
+
+
 # ── Health ─────────────────────────────────────────────────────────────────────
 @app.get("/api/health")
 async def health():

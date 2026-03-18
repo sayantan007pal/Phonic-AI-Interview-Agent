@@ -46,11 +46,11 @@ export default function InterviewRoom() {
   const playingRef = useRef(false);
 
   useEffect(() => {
-    api.get(`/api/interviews/${sessionId}`)
-      .then(res => {
-        setSession(res.data);
-        setStatus('ready');
-      })
+    const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+    // Use public endpoint — no auth required for candidates
+    fetch(`${BACKEND_URL}/api/public/interview/${sessionId}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(data => { setSession(data); setStatus('ready'); })
       .catch(() => setStatus('error'));
   }, [sessionId]);
 

@@ -1,4 +1,6 @@
 import uuid
+import os
+import httpx
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
@@ -168,13 +170,65 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
     if not doc:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    # Get candidate phone number
+    candidate = doc.get("candidate", {})
+    phone = candidate.get("phone")
+    if not phone:
+        raise HTTPException(status_code=400, detail="Candidate phone number not found")
+
+    # Ozonetel API configuration
+    api_key = os.getenv("OZONETEL_API_KEY")
+    api_url = os.getenv("OZONETEL_API_URL")
+    campaign_name = os.getenv("OZONETEL_CAMPAIGN_NAME")
+    username = os.getenv("OZONETEL_USERNAME")
+    callback_url = os.getenv("OZONETEL_CALLBACK_URL")
+
+    if not all([api_key, api_url, campaign_name, username]):
+        raise HTTPException(status_code=500, detail="Ozonetel configuration missing")
+
+    # Prepare Ozonetel API payload
+    payload = {
+        "api_key": api_key,
+        "username": username,
+        "campaignName": campaign_name,
+        "numbersDetails": [{
+            "phoneNumber": phone,
+            "extraData": {
+                "session_id": session_id,
+                "candidate_name": candidate.get("name", ""),
+                "callback_url": callback_url or ""
+            }
+        }]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(api_url, json=payload)
+            response.raise_for_status()
+            ozonetel_response = response.json()
+    except httpx.HTTPStatusError as e:
+        await db.interview_sessions.update_one(
+            {"session_id": session_id},
+            {"$set": {"status": "failed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        raise HTTPException(status_code=500, detail=f"Ozonetel API error: {e.response.text}")
+    except Exception as e:
+        await db.interview_sessions.update_one(
+            {"session_id": session_id},
+            {"$set": {"status": "failed", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        raise HTTPException(status_code=500, detail=f"Failed to trigger call: {str(e)}")
+
     await db.interview_sessions.update_one(
         {"session_id": session_id},
-        {"$set": {"status": "calling", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {
+            "status": "calling",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "ozonetel_response": ozonetel_response
+        }}
     )
 
-    # TODO: Integrate telephony trigger here
-    return {"status": "calling", "session_id": session_id, "message": "Call initiated"}
+    return {"status": "calling", "session_id": session_id, "message": "Call initiated via Ozonetel"}
 
 
 @router.post("/{session_id}/cancel")

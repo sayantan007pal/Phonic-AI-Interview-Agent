@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../lib/api';
 import { toast } from 'sonner';
-import { Star, ThumbsUp, AlertTriangle, Quote, ChevronLeft, RefreshCw, CheckCircle } from 'lucide-react';
+import { AlertTriangle, Quote, ChevronLeft, RefreshCw, CheckCircle } from 'lucide-react';
 
 function ScoreBar({ label, score, max = 5 }) {
   const pct = (score / max) * 100;
@@ -57,7 +57,7 @@ export default function EvaluationReport() {
     }
   };
 
-  useEffect(() => { fetchReport(); }, [sessionId]);
+  useEffect(() => { fetchReport(); }, [sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRerun = async () => {
     try {

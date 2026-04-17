@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import api from '../lib/api';
 import { VoiceWebSocket } from '../lib/ws';
-import { useTheme } from '../contexts/ThemeContext';
 import { Mic, MicOff, PhoneOff, Send, Volume2, VolumeX } from 'lucide-react';
 
 function WaveformBars({ active, size = 'md' }) {
@@ -27,7 +25,6 @@ function WaveformBars({ active, size = 'md' }) {
 
 export default function InterviewRoom() {
   const { token: sessionId } = useParams();
-  const { theme } = useTheme();
   const [session, setSession] = useState(null);
   const [transcript, setTranscript] = useState([]);
   const [status, setStatus] = useState('loading');
@@ -36,14 +33,10 @@ export default function InterviewRoom() {
   const [agentSpeaking, setAgentSpeaking] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [muted, setMuted] = useState(false);
-  const [useVoice, setUseVoice] = useState(true);
   const wsRef = useRef(null);
   const transcriptEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const audioCtxRef = useRef(null);
-  const audioQueueRef = useRef([]);
-  const playingRef = useRef(false);
 
   useEffect(() => {
     const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
@@ -229,7 +222,7 @@ export default function InterviewRoom() {
               </p>
 
               <div className="flex flex-col gap-3">
-                <button onClick={() => { connect(); setUseVoice(false); }}
+                <button onClick={() => { connect(); }}
                   className="btn-primary justify-center"
                   data-testid="start-text-interview-btn">
                   Start Interview (Text Mode)

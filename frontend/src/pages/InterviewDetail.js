@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../lib/api';
 import { toast } from 'sonner';
 import { MonitorWebSocket } from '../lib/ws';
-import { Phone, PhoneOff, Play, FileText, Clock, Activity, ChevronRight, RefreshCw, Star } from 'lucide-react';
+import { Phone, Play, FileText, Activity, RefreshCw, Star } from 'lucide-react';
 
 function StatusBadge({ status }) {
   return <span className={`badge badge-${status?.replace(/_/g, '-')}`}>{status?.replace(/_/g, ' ')}</span>;
@@ -46,7 +46,7 @@ export default function InterviewDetail() {
     fetchSession();
 
     // Connect monitor WebSocket
-    const ws = new MonitorWebSocket(sessionId, {
+    const ws = new MonitorWebSocket(sessionId, { // eslint-disable-line react-hooks/exhaustive-deps
       onMessage: (data) => {
         if (data.event === 'session.connected') {
           setTranscript(data.data?.transcript || []);
@@ -75,6 +75,7 @@ export default function InterviewDetail() {
       ws.disconnect();
       if (timerRef.current) clearInterval(timerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   // Timer

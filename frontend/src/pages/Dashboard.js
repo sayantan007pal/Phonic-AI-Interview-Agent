@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  ListVideo, CheckCircle, Clock, XCircle, TrendingUp,
+  ListVideo, CheckCircle, TrendingUp,
   Plus, ChevronRight, Calendar, Star
 } from 'lucide-react';
 

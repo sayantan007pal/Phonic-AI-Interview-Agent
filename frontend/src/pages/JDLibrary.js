@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../lib/api';
 import { toast } from 'sonner';
-import { Plus, FileText, Trash2, Upload, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, FileText, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 function JDCard({ jd, onDelete }) {
   const [expanded, setExpanded] = useState(false);

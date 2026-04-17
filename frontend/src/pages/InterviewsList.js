@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { toast } from 'sonner';
-import { Plus, Search, Filter, ChevronRight, XCircle, RefreshCw } from 'lucide-react';
+import { Plus, Search, ChevronRight, XCircle, RefreshCw } from 'lucide-react';
 
 const STATUS_OPTIONS = ['', 'scheduled', 'calling', 'in_progress', 'completed', 'failed', 'cancelled'];
 
@@ -34,7 +34,7 @@ export default function InterviewsList() {
     }
   };
 
-  useEffect(() => { fetchSessions(); }, [status, page]);
+  useEffect(() => { fetchSessions(); }, [status, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = sessions.filter(s =>
     !search ||

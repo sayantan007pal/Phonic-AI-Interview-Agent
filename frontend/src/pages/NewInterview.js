@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { toast } from 'sonner';
-import { Upload, ChevronDown, Mic, Phone, Globe, User, Briefcase, Clock, Bot } from 'lucide-react';
+import { Upload, Mic, Phone, Globe, User, Briefcase, Clock } from 'lucide-react';
 
 const ACCENTS = [
   { value: 'us', label: 'US English', flag: '🇺🇸' },

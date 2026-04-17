@@ -4,7 +4,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import {
   LayoutDashboard, ListVideo, PlusCircle, FileText,
-  Settings, Sun, Moon, LogOut, Menu, X, Mic
+  Settings, Sun, Moon, LogOut, Menu, Mic
 } from 'lucide-react';
 
 const nav = [

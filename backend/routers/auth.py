@@ -1,15 +1,24 @@
 import os
+import bcrypt
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
-from passlib.context import CryptContext
 from pydantic import BaseModel
 from db.mongo import get_db
 from models.interview_session import User
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt."""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify a password against a bcrypt hash."""
+    return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "phonic-secret-key")
@@ -56,7 +65,7 @@ class RegisterRequest(BaseModel):
 async def login(form: LoginRequest):
     db = get_db()
     doc = await db.users.find_one({"email": form.email})
-    if not doc or not pwd_context.verify(form.password, doc["hashed_password"]):
+    if not doc or not verify_password(form.password, doc["hashed_password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     user = User.from_mongo(doc)
     token = create_token({"sub": user.id, "email": user.email, "role": user.role})
@@ -71,7 +80,7 @@ async def register(req: RegisterRequest):
     existing = await db.users.find_one({"email": req.email})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    hashed = pwd_context.hash(req.password)
+    hashed = hash_password(req.password)
     user_doc = {
         "email": req.email,
         "name": req.name,

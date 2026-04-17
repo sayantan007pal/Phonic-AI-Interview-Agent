@@ -25,14 +25,14 @@ async def seed_demo_user():
     db = get_db()
     existing = await db.users.find_one({"email": "admin@phonic.ai"})
     if not existing:
-        from passlib.context import CryptContext
-        pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        import bcrypt
         from datetime import datetime, timezone
+        hashed = bcrypt.hashpw("phonic123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         await db.users.insert_one({
             "email": "admin@phonic.ai",
             "name": "Admin User",
             "role": "admin",
-            "hashed_password": pwd_context.hash("phonic123"),
+            "hashed_password": hashed,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
         print("Seeded demo user: admin@phonic.ai / phonic123")

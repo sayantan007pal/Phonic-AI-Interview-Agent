@@ -187,12 +187,14 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
         raise HTTPException(status_code=500, detail="Ozonetel configuration missing")
 
     # Prepare Ozonetel API payload
+    # Using uniqueId field which gets returned as DataUniqueId in the callback
     payload = {
         "api_key": api_key,
         "username": username,
         "campaignName": campaign_name,
         "numbersDetails": [{
             "phoneNumber": phone,
+            "uniqueId": session_id,  # This comes back as DataUniqueId in callback
             "extraData": {
                 "session_id": session_id,
                 "candidate_name": candidate.get("name", ""),

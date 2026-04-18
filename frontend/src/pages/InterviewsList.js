@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../lib/api';
 import { toast } from 'sonner';
-import { Plus, Search, ChevronRight, XCircle, RefreshCw } from 'lucide-react';
+import { Plus, Search, ChevronRight, XCircle, RefreshCw, RotateCcw } from 'lucide-react';
 
 const STATUS_OPTIONS = ['', 'scheduled', 'calling', 'in_progress', 'completed', 'failed', 'cancelled'];
 
@@ -49,6 +49,16 @@ export default function InterviewsList() {
       fetchSessions();
     } catch (err) {
       toast.error('Failed to cancel');
+    }
+  };
+
+  const handleReset = async (sessionId) => {
+    try {
+      await api.post(`/api/interviews/${sessionId}/reset`);
+      toast.success('Interview reset — ready to retry');
+      fetchSessions();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to reset');
     }
   };
 
@@ -167,6 +177,16 @@ export default function InterviewsList() {
                       >
                         View <ChevronRight size={12} />
                       </Link>
+                      {['calling', 'failed', 'cancelled'].includes(session.status) && (
+                        <button
+                          onClick={() => handleReset(session.session_id)}
+                          className="btn-ghost text-xs py-1 px-2"
+                          title="Reset & Retry"
+                          data-testid={`reset-btn-${session.session_id}`}
+                        >
+                          <RotateCcw size={12} />
+                        </button>
+                      )}
                       {['scheduled', 'calling'].includes(session.status) && (
                         <button
                           onClick={() => handleCancel(session.session_id)}

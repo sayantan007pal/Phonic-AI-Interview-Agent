@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../lib/api';
 import { toast } from 'sonner';
 import { MonitorWebSocket } from '../lib/ws';
-import { Phone, Play, FileText, Activity, RefreshCw, Star } from 'lucide-react';
+import { Phone, Play, FileText, Activity, RefreshCw, Star, RotateCcw } from 'lucide-react';
 
 function StatusBadge({ status }) {
   return <span className={`badge badge-${status?.replace(/_/g, '-')}`}>{status?.replace(/_/g, ' ')}</span>;
@@ -113,6 +113,16 @@ export default function InterviewDetail() {
     }
   };
 
+  const handleResetInterview = async () => {
+    try {
+      await api.post(`/api/interviews/${sessionId}/reset`);
+      toast.success('Interview reset to scheduled — you can now retry');
+      fetchSession();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to reset interview');
+    }
+  };
+
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
     const s = (secs % 60).toString().padStart(2, '0');
@@ -186,6 +196,12 @@ export default function InterviewDetail() {
               <FileText size={15} />
               View Report
             </Link>
+          )}
+          {['calling', 'failed', 'cancelled'].includes(session.status) && (
+            <button onClick={handleResetInterview} className="btn-secondary" data-testid="reset-interview-btn">
+              <RotateCcw size={15} />
+              Reset & Retry
+            </button>
           )}
         </div>
       </div>

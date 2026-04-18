@@ -29,6 +29,11 @@ async def get_settings(current_user: User = Depends(get_current_user)):
             "india_telephony_provider": os.getenv("INDIA_TELEPHONY_PROVIDER", "exotel"),
             "livekit_url": os.getenv("LIVEKIT_URL", "ws://localhost:7880"),
             "aws_region": os.getenv("AWS_REGION", "ap-south-1"),
+            "ozonetel_api_key": os.getenv("OZONETEL_API_KEY", ""),
+            "ozonetel_username": os.getenv("OZONETEL_USERNAME", ""),
+            "ozonetel_api_url": os.getenv("OZONETEL_API_URL", ""),
+            "ozonetel_campaign_name": os.getenv("OZONETEL_CAMPAIGN_NAME", ""),
+            "ozonetel_callback_url": os.getenv("OZONETEL_CALLBACK_URL", ""),
         }
 
     # Mask sensitive keys for display
@@ -38,7 +43,7 @@ async def get_settings(current_user: User = Depends(get_current_user)):
         "cartesia_api_key", "telnyx_api_key", "telnyx_public_key",
         "exotel_api_key", "exotel_api_token", "livekit_api_key",
         "livekit_api_secret", "aws_access_key_id", "aws_secret_access_key",
-        "ozonetel_api_key",
+        "ozonetel_api_key", "ozonetel_username",
     ]
     for field in sensitive_fields:
         if field in masked:
@@ -79,6 +84,10 @@ class UpdateSettingsRequest(BaseModel):
     exotel_virtual_number: Optional[str] = None
     ozonetel_api_key: Optional[str] = None
     ozonetel_did: Optional[str] = None
+    ozonetel_username: Optional[str] = None
+    ozonetel_api_url: Optional[str] = None
+    ozonetel_campaign_name: Optional[str] = None
+    ozonetel_callback_url: Optional[str] = None
     livekit_url: Optional[str] = None
     livekit_api_key: Optional[str] = None
     livekit_api_secret: Optional[str] = None

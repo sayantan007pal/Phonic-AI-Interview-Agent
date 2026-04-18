@@ -199,7 +199,7 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
     # Prepend country code
     phone_normalized = f"{country_code}{phone_10_digit}"
 
-    logger.info(f"Phone normalized: {phone} -> {phone_normalized} (country: {country})")
+    print(f"[DEBUG] Phone normalized: {phone} -> {phone_normalized} (country: {country}, code: {country_code})")
 
     # Ozonetel API configuration - read from DB settings with env fallback
     settings_doc = await db.app_settings.find_one({"key": "global"}) or {}
@@ -237,19 +237,19 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
         "numbersDetails": json.dumps(numbers_details)
     }
 
-    logger.info(f"Triggering Ozonetel call for session {session_id}, phone: {phone_normalized}, campaign: {campaign_name}")
-    logger.debug(f"Ozonetel form_data: {form_data}")
+    print(f"[DEBUG] Ozonetel form_data: apiKey={'SET' if api_key else 'MISSING'}, userName={username}, campaignName={campaign_name}")
+    print(f"[DEBUG] numbersDetails: {numbers_details}")
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             # Send as form-urlencoded data (not JSON body)
             response = await client.post(api_url, data=form_data)
-            logger.info(f"Ozonetel response status: {response.status_code}")
-            logger.debug(f"Ozonetel response body: {response.text}")
+            print(f"[DEBUG] Ozonetel response status: {response.status_code}")
+            print(f"[DEBUG] Ozonetel response body: {response.text}")
             response.raise_for_status()
             ozonetel_response = response.json()
     except httpx.HTTPStatusError as e:
-        logger.error(f"Ozonetel API HTTP error: {e.response.status_code} - {e.response.text}")
+        print(f"[ERROR] Ozonetel API HTTP error: {e.response.status_code} - {e.response.text}")
         await db.interview_sessions.update_one(
             {"session_id": session_id},
             {"$set": {
@@ -260,7 +260,7 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
         )
         raise HTTPException(status_code=500, detail=f"Ozonetel API error: {e.response.text}")
     except Exception as e:
-        logger.error(f"Ozonetel API exception: {str(e)}")
+        print(f"[ERROR] Ozonetel API exception: {str(e)}")
         await db.interview_sessions.update_one(
             {"session_id": session_id},
             {"$set": {
@@ -271,9 +271,10 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
         )
         raise HTTPException(status_code=500, detail=f"Failed to trigger call: {str(e)}")
 
-    # Check if Ozonetel returned an error
-    if ozonetel_response.get("status") == "error":
-        logger.error(f"Ozonetel returned error: {ozonetel_response}")
+    # Check if Ozonetel returned an error or failure status
+    ozonetel_status = ozonetel_response.get("status", "").lower()
+    if ozonetel_status in ["error", "failure"]:
+        print(f"[ERROR] Ozonetel returned {ozonetel_status}: {ozonetel_response}")
         await db.interview_sessions.update_one(
             {"session_id": session_id},
             {"$set": {
@@ -282,7 +283,7 @@ async def trigger_call(session_id: str, current_user: User = Depends(get_current
                 "ozonetel_response": ozonetel_response
             }}
         )
-        raise HTTPException(status_code=500, detail=f"Ozonetel error: {ozonetel_response.get('message', 'Unknown error')}")
+        raise HTTPException(status_code=500, detail=f"Ozonetel {ozonetel_status}: {ozonetel_response.get('message', 'Unknown error')}")
 
     await db.interview_sessions.update_one(
         {"session_id": session_id},
